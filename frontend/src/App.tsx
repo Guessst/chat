@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Chat } from './Chat'
 
 const SERVER_IP = "http://localhost:8000"
 
@@ -47,6 +48,7 @@ export default function App() {
         <button onClick={postToServer}>postToServer</button>
         <br/>
       </div>
+      <Chat/>
     </>
   )
 }
