@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,8 +31,15 @@ var consumer = app.Services.GetRequiredService<MessageConsumer>();
 await consumer.InitializeAsync();
 consumer.OnMessageReceived += async msg =>
 {
+    var data = JsonSerializer.Deserialize<ChatMessage>(msg);
+    if (data is null)
+    {
+        Console.WriteLine("Received null data.");
+        return;    
+    }
+
     var hubContext = app.Services.GetRequiredService<IHubContext<ChatHub>>();
-    await hubContext.Clients.All.SendAsync("ReceiveMessage", msg);
+    await hubContext.Clients.All.SendAsync("ReceiveMessage", data.User, data.Message);
 };
 await consumer.StartAsync();
 

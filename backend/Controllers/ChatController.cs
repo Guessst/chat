@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -23,7 +24,8 @@ public class ChatController : ControllerBase
     {
         Console.WriteLine("executing chat...");
 
-        _publisher.Publish($"{request.User}: {request.Message}");
+        var json = JsonSerializer.Serialize(request);
+        _publisher.Publish(json);
 
         return Ok();
     }

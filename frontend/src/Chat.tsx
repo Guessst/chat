@@ -17,6 +17,9 @@ export function Chat() {
             console.log("user", user)
             console.log("message", message)
         });
+        // connection.on("ReceiveMessage", (user: string, message: string) => {
+        //     console.log(`user: ${user}, message: ${message}`)
+        // })
 
         return () => {
             connection.stop();
