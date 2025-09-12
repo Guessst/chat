@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,13 +9,18 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // React
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // React
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials(); // importante para SignalR
     });
 });
 builder.Services.AddSignalR();
+
+builder.Services.AddDbContext<ChatContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
+
 
 builder.Services.AddSingleton<MessagePublisher>();
 builder.Services.AddSingleton<MessageConsumer>();
@@ -39,7 +45,7 @@ consumer.OnMessageReceived += async msg =>
     }
 
     var hubContext = app.Services.GetRequiredService<IHubContext<ChatHub>>();
-    await hubContext.Clients.All.SendAsync("ReceiveMessage", data.User, data.Message);
+    await hubContext.Clients.All.SendAsync("ReceiveMessage", data.User, data.TextContent);
 };
 await consumer.StartAsync();
 

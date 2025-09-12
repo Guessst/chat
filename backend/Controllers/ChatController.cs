@@ -1,37 +1,27 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("chat/")]
 public class ChatController : ControllerBase
 {
-    private readonly MessagePublisher _publisher;
+    private readonly ChatContext _db;
 
-    public ChatController(MessagePublisher publisher)
+
+    public ChatController(ChatContext db)
     {
-        _publisher = publisher;
+        _db = db;
     }
-
-    [HttpGet("print")]
-    public IActionResult Print()
+    
+    [HttpGet]
+    public async Task<IEnumerable<ChatMessageInDB>> GetMessages()
     {
-        Console.WriteLine("print Hello World!");
-        return Ok(); // returns response to client
-    }
-
-    [HttpPost("send")]
-    public IActionResult Send([FromBody] ChatMessage request)
-    {
-        Console.WriteLine("executing chat...");
-
-        var json = JsonSerializer.Serialize(request);
-        _publisher.Publish(json);
-
-        return Ok();
+        return await _db.Messages
+            .OrderBy(m => m.Timestamp)
+            .ToListAsync();
     }
 }
-
 /*
 curl -X POST http://localhost:5296/api/chat/send -H "Content-Type: application/json" -d "{\"user\":\"gustavo\", \"message\":\"ola mundo\"}"
 */
-public record ChatMessage(string User, string Message);

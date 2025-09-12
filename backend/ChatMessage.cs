@@ -1,0 +1,1 @@
+public record ChatMessage(string User, string TextContent, DateTime Timestamp);
