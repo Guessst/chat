@@ -16,7 +16,7 @@ public class ChatHub : Hub
     public async Task SendMessage(string user, string textContent)
     {
         // Console.WriteLine($"SendMessage: user: {user}, textContent: {textContent}");
-        var dbMessage = new ChatMessageModel { User = user, TextContent = user };
+        var dbMessage = new ChatMessageModel { User = user, TextContent = textContent };
         var message = new ChatMessage(user, textContent, dbMessage.Timestamp);
 
         _db.Messages.Add(dbMessage);

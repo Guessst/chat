@@ -1,5 +1,10 @@
 import * as signalR from "@microsoft/signalr";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+
+const CHAT_LIMITS = {
+    MAX_MESSAGE_LENGTH: 2000,
+}
 
 interface ChatMessage {
     user: string
@@ -31,7 +36,7 @@ function formattedDate(d: Date) {
     }).replace(",", "")
 };
 
-const TEST_MESSAGE_LIST = randomObjects(
+let TEST_MESSAGE_LIST = randomObjects(
     5,
     ["daniel", "david", "gustavo", "manoel", "nosek"],
     ["salve", "lorem ipsum dolor sit amet", "amém", "こんにちは", "всем привет"],
@@ -39,17 +44,32 @@ const TEST_MESSAGE_LIST = randomObjects(
 
 TEST_MESSAGE_LIST[0].textContent = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
+TEST_MESSAGE_LIST = []
+
 export function ChatHub() {
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>(TEST_MESSAGE_LIST);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
     const [currentUser, setCurrentUser] = useState<string>("Gustavo")
     const [input, setInput] = useState<string>("");
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+    // ----------------------------------
+    // CONNECTION-RELATED FUNCTIONS/HOOKS
     const handleSendMessage = () => {
-        if ((!!connection) && (!!currentUser) && (input.trim().length > 0)) {
-            // !! Não esquecer de sanitizar input no servidor   
-            connection.invoke("SendMessage", currentUser, input);
-            setInput("");
+        if ((!!connection) && (!!currentUser)) {
+            const trimmedInput = input.trim()
+            const inputIsInSpec =
+                (trimmedInput.length > 0)
+                && trimmedInput.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH
+
+            if (inputIsInSpec) {
+                // !! Não esquecer de sanitizar input no servidor   
+                connection.invoke("SendMessage", currentUser, trimmedInput);
+                setInput("");
+            }
         }
     }
 
@@ -80,11 +100,40 @@ export function ChatHub() {
         };
     }, []);
 
+    // ----------------------------------
+    // SCROLL-RELATED
+    const handleScroll = () => {
+        if (!containerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+        // consider "at bottom" if within 20px of the bottom
+        setIsAtBottom(scrollHeight - scrollTop - clientHeight < 20);
+    };
+
+    // Auto-scroll only if user is at bottom
+    useEffect(() => {
+        if (isAtBottom) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [chatMessages, isAtBottom]);
+
+
+    // TEXT-AREA RELATED
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto"; // reset
+            textareaRef.current.style.height = textareaRef.current.scrollHeight + "px"; // adjust to content
+        }
+    }, [input]); // runs whenever input changes
+
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="max-h-[75vh] overflow-y-auto w-full max-w-xl bg-white shadow-lg rounded-2xl flex flex-col p-4">
-                <div className="flex-1 overflow-y-auto mb-4 space-y-2">
+            <div className="max-h-[75vh] overflow-y-auto w-full max-w-75/100 bg-white shadow-lg rounded-2xl flex flex-col p-4">
+                <div
+                    ref={containerRef}
+                    className="flex-1 overflow-y-auto mb-4 space-y-2"
+                    onScroll={handleScroll}
+                >
                     {chatMessages
                         .map(cm => ({ ...cm, timestamp: formattedDate(cm.timestamp) }))
                         .map((cm, i) => (
@@ -93,13 +142,19 @@ export function ChatHub() {
                                     <span><b>{cm.user}</b>,</span>
                                     <span>{cm.timestamp}</span>
                                 </div>
-                                <div className="whitespace-pre-wrap break-all break-words">{cm.textContent}</div>
+                                <div className="break-words break-all whitespace-pre-wrap">{cm.textContent}</div>
                             </div>
                         ))}
+                    <div ref={messagesEndRef} />
                 </div>
                 <div className="flex items-center space-x-2">
                     <textarea
-                        className="flex-1 rounded-2xl border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto max-h-[10vh] min-h-11"
+                        ref={textareaRef}
+                        className={
+                            `flex-1 rounded-2xl border border-gray-300 px-4 py-2 resize-none overflow-y-auto max-h-[10vh] min-h-11 focus:outline-none focus:ring-2
+                            ${input.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH ? `focus:ring-blue-500` : `focus:ring-red-500`}
+                            `
+                        }
                         value={input}
                         onChange={(e) => {
                             setInput(e.target.value);
@@ -108,14 +163,15 @@ export function ChatHub() {
                         }}
                         onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                            e.currentTarget.style.height = "auto"; // reset after send
+                                e.preventDefault();
+                                if (input.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH) {
+                                    handleSendMessage();
+                                }
                             }
                         }}
                         placeholder="Type a message..."
                         rows={1}
-                        />
+                    />
 
                     <button
                         onClick={handleSendMessage}
