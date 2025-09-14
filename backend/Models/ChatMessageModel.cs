@@ -1,4 +1,4 @@
-public class ChatMessageInDB
+public class ChatMessageModel
 {
     public int Id { get; set; }
     public string User { get; set; } = string.Empty;

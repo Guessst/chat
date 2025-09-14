@@ -6,16 +6,16 @@ using Microsoft.EntityFrameworkCore;
 [Route("chat/")]
 public class ChatController : ControllerBase
 {
-    private readonly ChatContext _db;
+    private readonly ChatDbContext _db;
 
 
-    public ChatController(ChatContext db)
+    public ChatController(ChatDbContext db)
     {
         _db = db;
     }
     
     [HttpGet]
-    public async Task<IEnumerable<ChatMessageInDB>> GetMessages()
+    public async Task<IEnumerable<ChatMessageModel>> GetMessages()
     {
         return await _db.Messages
             .OrderBy(m => m.Timestamp)

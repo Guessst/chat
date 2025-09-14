@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddSignalR();
 
-builder.Services.AddDbContext<ChatContext>(options =>
+builder.Services.AddDbContext<ChatDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
@@ -45,7 +45,7 @@ consumer.OnMessageReceived += async msg =>
     }
 
     var hubContext = app.Services.GetRequiredService<IHubContext<ChatHub>>();
-    await hubContext.Clients.All.SendAsync("ReceiveMessage", data.User, data.TextContent);
+    await hubContext.Clients.All.SendAsync("ReceiveMessage", data.User, data.TextContent, data.Timestamp);
 };
 await consumer.StartAsync();
 
