@@ -24,6 +24,7 @@ builder.Services.AddDbContext<ChatDbContext>(options =>
 
 builder.Services.AddSingleton<MessagePublisher>();
 builder.Services.AddSingleton<MessageConsumer>();
+builder.Services.AddHostedService<MessageCleanupService>();
 builder.Services.AddControllers();
 
 var app = builder.Build();

@@ -1,10 +1,14 @@
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 
+const SERVER_IP = "http://localhost:5249"
+const WEBSOCKET_SERVER_ADDRESS = `${SERVER_IP}/chatHub`
+const ENDPOINT_GET_CHAT_HISTORY = `${SERVER_IP}/chat`
 
 const CHAT_LIMITS = {
     MAX_MESSAGE_LENGTH: 2000,
 }
+const USER_LOCALE = navigator.language || navigator.languages[0];
 
 interface ChatMessage {
     user: string
@@ -12,22 +16,15 @@ interface ChatMessage {
     timestamp: Date
 }
 
-function randomObjects(n: number, users: string[], texts: string[]) {
-    const m = 10
-
-    return Array.from({ length: n }, () => ({
-        user: users[Math.floor(Math.random() * users.length)],
-        textContent: Array.from(
-            { length: Math.floor(Math.random() * m) + 1 },
-            () => texts[Math.floor(Math.random() * texts.length)]
-        ).join(" "),
-        timestamp: new Date(Date.now()),
-    }));
+interface UnprocessedChatMessage {
+    user: string
+    textContent: string
+    timestamp: string
 }
 
 function formattedDate(d: Date) {
-    return d.toLocaleString("pt-BR", {
-        month: "2-digit",  // Sep
+    return d.toLocaleString(USER_LOCALE, {
+        month: "2-digit",  // 09
         day: "2-digit", // 14
         year: "numeric", // 2025
         hour: "2-digit", // 15
@@ -36,20 +33,10 @@ function formattedDate(d: Date) {
     }).replace(",", "")
 };
 
-let TEST_MESSAGE_LIST = randomObjects(
-    5,
-    ["daniel", "david", "gustavo", "manoel", "nosek"],
-    ["salve", "lorem ipsum dolor sit amet", "amém", "こんにちは", "всем привет"],
-)
-
-TEST_MESSAGE_LIST[0].textContent = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-
-TEST_MESSAGE_LIST = []
-
 export function ChatHub() {
-    const [chatMessages, setChatMessages] = useState<ChatMessage[]>(TEST_MESSAGE_LIST);
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-    const [currentUser, setCurrentUser] = useState<string>("Gustavo")
+    const [currentUser, _setCurrentUser] = useState<string>("Gustavo")
     const [input, setInput] = useState<string>("");
     const [isAtBottom, setIsAtBottom] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -84,8 +71,26 @@ export function ChatHub() {
     }
 
     useEffect(() => {
+        // NOTE: estou ciente de que pode ocorrer de fazer fetch de mensagens e
+        // chegarem mensagens no websocket antes do retorno.
+        fetch(
+            ENDPOINT_GET_CHAT_HISTORY, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+       }).then(res => res.json()).then((resJson: UnprocessedChatMessage[]) => {
+            const messages: ChatMessage[] = resJson.map(m => ({
+                user: m.user,
+                textContent: m.textContent,
+                timestamp: new Date(m.timestamp),
+            }));
+
+            setChatMessages(messages);
+        });
+
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("http://localhost:5249/chatHub")
+            .withUrl(WEBSOCKET_SERVER_ADDRESS)
             .withAutomaticReconnect()
             .build();
 
@@ -169,7 +174,7 @@ export function ChatHub() {
                                 }
                             }
                         }}
-                        placeholder="Type a message..."
+                        placeholder={USER_LOCALE === "pt-BR" ? "Digite uma mensagem..." : "Type a message..."}
                         rows={1}
                     />
 

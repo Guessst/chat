@@ -15,10 +15,15 @@ public class ChatController : ControllerBase
     }
     
     [HttpGet]
-    public async Task<IEnumerable<ChatMessageModel>> GetMessages()
+    public async Task<IEnumerable<ChatMessage>> GetMessages()
     {
         return await _db.Messages
             .OrderBy(m => m.Timestamp)
+            .Select(m => new ChatMessage(
+                m.User,          // map to ChatMessage.User
+                m.TextContent,   // map to ChatMessage.TextContent
+                m.Timestamp      // map to ChatMessage.Timestamp
+            ))
             .ToListAsync();
     }
 }
