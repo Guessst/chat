@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,10 +18,13 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddSignalR();
 
+// read RabbitMQ config from settings
+var rabbitConfig = builder.Configuration.GetSection("RabbitMQ");
+builder.Services.Configure<RabbitMqOptions>(rabbitConfig);
+
 builder.Services.AddDbContext<ChatDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
-
 
 builder.Services.AddSingleton<MessagePublisher>();
 builder.Services.AddSingleton<MessageConsumer>();
@@ -29,6 +33,13 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 app.UseCors();
+
+// Migrate no Startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
+    db.Database.Migrate();
+}
 
 // Inicializa serviços async
 var publisher = app.Services.GetRequiredService<MessagePublisher>();

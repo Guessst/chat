@@ -33,12 +33,27 @@ function formattedDate(d: Date) {
     }).replace(",", "")
 };
 
+
+function useLocalStorage(key: string, initialValue: string) {
+  const [value, setValue] = useState(() => {
+    const saved = localStorage.getItem(key);
+    return saved !== null ? saved : initialValue;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
+
 export function ChatHub() {
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-    const [currentUser, setCurrentUser] = useState<string>(USER_LOCALE === "pt-BR" ? "Usuário" : "User")
+    const [currentUser, setCurrentUser] = useLocalStorage("username", USER_LOCALE === "pt-BR" ? "Usuário" : "User")
     const [input, setInput] = useState<string>("");
     const [isAtBottom, setIsAtBottom] = useState(true);
+    const [isFetchingMessages, setIsFetchingMessages] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -86,6 +101,7 @@ export function ChatHub() {
                 timestamp: new Date(m.timestamp),
             }));
 
+            setIsFetchingMessages(false);
             setChatMessages(messages);
         });
 
@@ -148,24 +164,45 @@ export function ChatHub() {
                 />
 
                 {/* Messages */}
-                <div
-                    ref={containerRef}
-                    className="flex-1 overflow-y-auto mb-4 space-y-2"
-                    onScroll={handleScroll}
-                >
-                    {chatMessages
-                        .map(cm => ({ ...cm, timestamp: formattedDate(cm.timestamp) }))
-                        .map((cm, i) => (
-                            <div key={i} className="p-2 rounded-lg text-gray-800 w-fit">
-                                <div className="text-sm space-x-1">
-                                    <span><b>{cm.user}</b>,</span>
-                                    <span>{cm.timestamp}</span>
-                                </div>
-                                <div className="break-words break-all whitespace-pre-wrap">{cm.textContent}</div>
+                {isFetchingMessages
+                ?
+                    <div className="space-y-2">
+                        {[...Array(3)].map((_, i) => (
+                        <div key={i} className="p-2 rounded-lg w-fit animate-pulse">
+                            {/* username + timestamp */}
+                            <div className="flex space-x-2 mb-2">
+                            <div className="h-3 w-20 bg-gray-300 rounded"></div>
+                            <div className="h-3 w-12 bg-gray-200 rounded"></div>
                             </div>
+                            {/* message lines */}
+                            <div className="space-y-2">
+                            <div className="h-3 w-64 bg-gray-200 rounded"></div>
+                            <div className="h-3 w-48 bg-gray-200 rounded"></div>
+                            <div className="h-3 w-40 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
                         ))}
-                    <div ref={messagesEndRef} />
-                </div>
+                    </div>
+                :
+                    <div
+                        ref={containerRef}
+                        className="flex-1 overflow-y-auto mb-4 space-y-2"
+                        onScroll={handleScroll}
+                    >
+                        {chatMessages
+                            .map(cm => ({ ...cm, timestamp: formattedDate(cm.timestamp) }))
+                            .map((cm, i) => (
+                                <div key={i} className="p-2 rounded-lg text-gray-800 w-fit">
+                                    <div className="text-sm space-x-1">
+                                        <span><b>{cm.user}</b>,</span>
+                                        <span>{cm.timestamp}</span>
+                                    </div>
+                                    <div className="break-words break-all whitespace-pre-wrap">{cm.textContent}</div>
+                                </div>
+                            ))}
+                        <div ref={messagesEndRef} />
+                    </div>
+                }
                 <div className="flex items-center space-x-2">
                     <textarea
                         ref={textareaRef}

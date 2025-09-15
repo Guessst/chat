@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -7,11 +8,20 @@ public class MessageConsumer : IAsyncDisposable
     
     private IConnection? _connection;
     private IChannel? _channel;
+    private readonly RabbitMqOptions _options;
+    public MessageConsumer(IOptions<RabbitMqOptions> options)
+    {
+        _options = options.Value;
+    }
     public event Action<string>? OnMessageReceived;
     
     public async Task InitializeAsync()
     {
-        var factory = new ConnectionFactory() { HostName = "localhost" };
+        var factory = new ConnectionFactory();
+        factory.UserName = _options.UserName;
+        factory.Password = _options.Password;
+        factory.HostName = _options.HostName;
+        
         _connection = await factory.CreateConnectionAsync();
         _channel = await _connection.CreateChannelAsync();
 
