@@ -36,7 +36,7 @@ function formattedDate(d: Date) {
 export function ChatHub() {
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-    const [currentUser, _setCurrentUser] = useState<string>("Gustavo")
+    const [currentUser, setCurrentUser] = useState<string>(USER_LOCALE === "pt-BR" ? "Usuário" : "User")
     const [input, setInput] = useState<string>("");
     const [isAtBottom, setIsAtBottom] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -133,7 +133,21 @@ export function ChatHub() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="max-h-[75vh] overflow-y-auto w-full max-w-75/100 bg-white shadow-lg rounded-2xl flex flex-col p-4">
+            <div className="relative max-h-[75vh] overflow-y-auto w-full max-w-75/100 bg-white shadow-lg rounded-2xl flex flex-col p-4">
+                {/* Floating username */}
+                {/* Limitar tamanho do username */}
+                <input
+                    type="text"
+                    className="absolute top-6 right-12 text-sm w-[20ch] font-bold px-2 py-1 border rounded-lg shadow-sm bg-white
+                                opacity-50
+                                focus:opacity-100
+                                focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="Username"
+                    value={currentUser}
+                    onChange={(e) => setCurrentUser(e.target.value)}
+                />
+
+                {/* Messages */}
                 <div
                     ref={containerRef}
                     className="flex-1 overflow-y-auto mb-4 space-y-2"
