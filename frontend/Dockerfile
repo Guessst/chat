@@ -1,6 +1,11 @@
 # build stage
 FROM node:22 AS build
 WORKDIR /app
+
+# Define an ARG for build time
+ARG VITE_BACKEND_SERVER_IP
+ENV VITE_BACKEND_SERVER_IP=$VITE_BACKEND_SERVER_IP
+
 COPY . .
 RUN npm ci
 RUN npm run build

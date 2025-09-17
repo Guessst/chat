@@ -1,0 +1,16 @@
+services:
+  db:
+    env_file:
+      - ".env.development.docker"
+
+  rabbitmq:
+    env_file:
+      - ".env.development.docker"
+  
+  backend:
+    env_file:
+      - ".env.development.docker"
+
+  frontend:
+    env_file:
+      - ".env.development.docker"

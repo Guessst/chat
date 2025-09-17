@@ -18,6 +18,7 @@ public class MessagePublisher : IAsyncDisposable
         factory.UserName = _options.UserName;
         factory.Password = _options.Password;
         factory.HostName = _options.HostName;
+        Console.WriteLine($"{_options.UserName}, {_options.Password}, {_options.HostName}");
         
         _connection = await factory.CreateConnectionAsync();
         _channel = await _connection.CreateChannelAsync();

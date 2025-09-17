@@ -4,5 +4,5 @@ docker run -d --hostname rabbitmq --name rabbitmq -p 5672:5672 -p 15672:15672 ra
 # Run Docker Container for RabbitMQ
 docker start rabbitmq
 
-# Compose
-docker compose up --build
+# Compose for local testing
+docker compose --env-file .env.development.docker up --build

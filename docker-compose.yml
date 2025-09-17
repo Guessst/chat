@@ -2,10 +2,12 @@ services:
   db:
     image: postgres:17
     restart: always
+    env_file:
+      - ".env.production"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: chatdb
+      POSTGRES_DB: ${ENV_POSTGRES_DB}
+      POSTGRES_USER: ${ENV_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${ENV_POSTGRES_PASSWORD}
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
@@ -13,30 +15,46 @@ services:
 
   rabbitmq:
     image: rabbitmq:4-management
+    env_file:
+      - ".env.production"
     environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: pass
+      RABBITMQ_DEFAULT_USER: ${ENV_RABBIT_MQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${ENV_RABBIT_MQ_PASS}
     restart: always
     ports:
       - "5672:5672"   # app connections
       - "15672:15672" # mgmt UI
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
   backend:
     build: ./backend
     depends_on:
-      - db
-      - rabbitmq
+      db:
+        condition: service_started # todo healthcheck
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ".env.production"
     environment:
-      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_ENVIRONMENT: ${ENV_ASPNETCORE_ENVIRONMENT}
     ports:
-      - "8080:8080"
-
+      - "5249:5249"
+  
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      args:
+        VITE_BACKEND_SERVER_IP: ${ENV_VITE_BACKEND_SERVER_IP}
     depends_on:
       - backend
+    env_file:
+      - ".env.production"
     ports:
       - "80:80"
 

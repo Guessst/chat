@@ -1,9 +1,6 @@
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
-
-const SERVER_IP = "http://localhost:5249"
-const WEBSOCKET_SERVER_ADDRESS = `${SERVER_IP}/chatHub`
-const ENDPOINT_GET_CHAT_HISTORY = `${SERVER_IP}/chat`
+import { ENDPOINT_GET_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
 
 const CHAT_LIMITS = {
     MAX_MESSAGE_LENGTH: 2000,
@@ -106,7 +103,7 @@ export function ChatHub() {
         });
 
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(WEBSOCKET_SERVER_ADDRESS)
+            .withUrl(WEBSOCKET_ADDRESS)
             .withAutomaticReconnect()
             .build();
 
@@ -236,6 +233,8 @@ export function ChatHub() {
                         {"\u27A4"}
                     </button>
                 </div>
+                <p>ENDPOINT_GET_CHAT_HISTORY: {ENDPOINT_GET_CHAT_HISTORY}</p>
+                <p>WEBSOCKET_ADDRESS: {WEBSOCKET_ADDRESS}</p>
             </div>
         </div>
     );
