@@ -8,4 +8,13 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/chat': 'http://localhost:5249',
+      "/chatHub": {
+        target: "http://localhost:5249",
+        ws: true,
+      }
+    },
+  },
 })

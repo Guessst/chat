@@ -1,6 +1,6 @@
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
-import { ENDPOINT_GET_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
+import { ENDPOINT_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
 
 const CHAT_LIMITS = {
     MAX_MESSAGE_LENGTH: 2000,
@@ -86,7 +86,7 @@ export function ChatHub() {
         // NOTE: estou ciente de que pode ocorrer de fazer fetch de mensagens e
         // chegarem mensagens no websocket antes do retorno.
         fetch(
-            ENDPOINT_GET_CHAT_HISTORY, {
+            ENDPOINT_CHAT_HISTORY, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -233,7 +233,7 @@ export function ChatHub() {
                         {"\u27A4"}
                     </button>
                 </div>
-                <p>ENDPOINT_GET_CHAT_HISTORY: {ENDPOINT_GET_CHAT_HISTORY}</p>
+                <p>ENDPOINT_GET_CHAT_HISTORY: {ENDPOINT_CHAT_HISTORY}</p>
                 <p>WEBSOCKET_ADDRESS: {WEBSOCKET_ADDRESS}</p>
             </div>
         </div>

@@ -44,13 +44,10 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ENV_ASPNETCORE_ENVIRONMENT}
     ports:
-      - "5249:5249"
+      - "8080:8080"
   
   frontend:
-    build: 
-      context: ./frontend
-      args:
-        VITE_BACKEND_SERVER_IP: ${ENV_VITE_BACKEND_SERVER_IP}
+    build: ./frontend
     depends_on:
       - backend
     env_file:
