@@ -1,1 +1,1 @@
-public record ChatMessage(string User, string TextContent, DateTime Timestamp);
+public record ChatMessage(int Id, string Username, string TextContent, DateTime Timestamp);

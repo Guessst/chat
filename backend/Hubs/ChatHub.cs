@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 public class ChatHub : Hub
 {
@@ -13,19 +14,57 @@ public class ChatHub : Hub
         _services = services;
     }
 
-    public async Task SendMessage(string user, string textContent)
+    public async Task SendMessage(string username, string textContent)
     {
-        // Console.WriteLine($"SendMessage: user: {user}, textContent: {textContent}");
-        var dbMessage = new ChatMessageModel { User = user, TextContent = textContent };
-        var message = new ChatMessage(user, textContent, dbMessage.Timestamp);
+        // Validate and format message
+        var formattedMessage = ValidateAndFormatMessage(username, textContent);
 
-        _db.Messages.Add(dbMessage);
-        await _db.SaveChangesAsync();
+        // Create DB entity
+        var dbMessage = new ChatMessageModel
+        {
+            Username = formattedMessage.Username,
+            TextContent = formattedMessage.TextContent
+        };
 
-        MessagePublisher publisher = _services.GetRequiredService<MessagePublisher>();
-        string jsonStr = JsonSerializer.Serialize(message);
-        publisher.Publish(jsonStr);
+        try
+        {
+            // Save to database
+            _db.Messages.Add(dbMessage);
+            await _db.SaveChangesAsync();
 
-        // await Clients.All.SendAsync("ReceiveMessage", user, message, dbMessage.Timestamp);
+            // Publish message
+            var message = new ChatMessage(dbMessage.Id, dbMessage.Username, dbMessage.TextContent, dbMessage.Timestamp);
+            var publisher = _services.GetRequiredService<MessagePublisher>();
+            string jsonStr = JsonSerializer.Serialize(message);
+            publisher.Publish(jsonStr);
+
+            // Optional: send to connected clients
+            // await Clients.All.SendAsync("ReceiveMessage", dbMessage.User, message, dbMessage.Timestamp);
+        }
+        catch (Exception e)
+        {
+            // Handle/log failure
+            throw new InvalidOperationException("Failed to send message.", e);
+        }
+    }
+
+    private static (string Username, string TextContent) ValidateAndFormatMessage(string username, string textContent)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+            throw new ArgumentException("Username cannot be empty");
+
+        if (username.Length > ChatLimits.MaxUserLength)
+            throw new ArgumentException($"Username cannot exceed {ChatLimits.MaxUserLength} characters");
+
+        if (string.IsNullOrWhiteSpace(textContent))
+            throw new ArgumentException("Message cannot be empty");
+
+        if (textContent.Length > ChatLimits.MaxMessageLength)
+            throw new ArgumentException($"Message cannot exceed {ChatLimits.MaxMessageLength} characters");
+
+        // Basic sanitization: encode HTML
+        textContent = System.Net.WebUtility.HtmlEncode(textContent);
+
+        return (username.Trim(), textContent.Trim());
     }
 }

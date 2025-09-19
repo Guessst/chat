@@ -20,7 +20,8 @@ public class ChatController : ControllerBase
         return await _db.Messages
             .OrderBy(m => m.Timestamp)
             .Select(m => new ChatMessage(
-                m.User,          // map to ChatMessage.User
+                m.Id,
+                m.Username,          // map to ChatMessage.User
                 m.TextContent,   // map to ChatMessage.TextContent
                 m.Timestamp      // map to ChatMessage.Timestamp
             ))

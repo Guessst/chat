@@ -10,8 +10,6 @@ var allowedOrigins = builder.Configuration
     .Get<string[]>()
     ?? throw new InvalidOperationException("CORS origins not configured.");
 
-Console.WriteLine($"allowedOrigins: {string.Join("", allowedOrigins)}");
-
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -74,6 +72,14 @@ builder.Services.AddSingleton<MessageConsumer>();
 builder.Services.AddHostedService<MessageCleanupService>();
 builder.Services.AddControllers();
 
+builder.Logging.ClearProviders();
+builder.Logging.AddSimpleConsole(options =>
+{
+    options.IncludeScopes = true;
+    options.SingleLine = true;
+    options.TimestampFormat = "[dd-MM-yyyy HH:mm:ss.fff] ";
+});
+
 var app = builder.Build();
 app.UseCors();
 
@@ -100,7 +106,7 @@ consumer.OnMessageReceived += async msg =>
     }
 
     var hubContext = app.Services.GetRequiredService<IHubContext<ChatHub>>();
-    await hubContext.Clients.All.SendAsync("ReceiveMessage", data.User, data.TextContent, data.Timestamp);
+    await hubContext.Clients.All.SendAsync("ReceiveMessage", data.Id, data.Username, data.TextContent, data.Timestamp);
 };
 await consumer.StartAsync();
 

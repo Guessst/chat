@@ -4,17 +4,22 @@ import { ENDPOINT_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
 
 const CHAT_LIMITS = {
     MAX_MESSAGE_LENGTH: 2000,
+    MAX_USERNAME_LENGTH: 20,
 }
 const USER_LOCALE = navigator.language || navigator.languages[0];
 
+// const IS_DEV = import.meta.env.DEV === true
+
 interface ChatMessage {
-    user: string
+    id: number
+    username: string
     textContent: string
     timestamp: Date
 }
 
 interface UnprocessedChatMessage {
-    user: string
+    id: number
+    username: string
     textContent: string
     timestamp: string
 }
@@ -32,23 +37,23 @@ function formattedDate(d: Date) {
 
 
 function useLocalStorage(key: string, initialValue: string) {
-  const [value, setValue] = useState(() => {
-    const saved = localStorage.getItem(key);
-    return saved !== null ? saved : initialValue;
-  });
+    const [value, setValue] = useState(() => {
+        const saved = localStorage.getItem(key);
+        return saved !== null ? saved : initialValue;
+    });
 
-  useEffect(() => {
-    localStorage.setItem(key, value);
-  }, [key, value]);
+    useEffect(() => {
+        localStorage.setItem(key, value);
+    }, [key, value]);
 
-  return [value, setValue] as const;
+    return [value, setValue] as const;
 }
 
 export function ChatHub() {
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-    const [currentUser, setCurrentUser] = useLocalStorage("username", USER_LOCALE === "pt-BR" ? "Usuário" : "User")
-    const [input, setInput] = useState<string>("");
+    const [currentUsername, setCurrentUsername] = useLocalStorage("username", USER_LOCALE === "pt-BR" ? "Usuário" : "User")
+    const [currentInput, setCurrentInput] = useState<string>("");
     const [isAtBottom, setIsAtBottom] = useState(true);
     const [isFetchingMessages, setIsFetchingMessages] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -58,24 +63,31 @@ export function ChatHub() {
     // ----------------------------------
     // CONNECTION-RELATED FUNCTIONS/HOOKS
     const handleSendMessage = () => {
-        if ((!!connection) && (!!currentUser)) {
-            const trimmedInput = input.trim()
+        if ((!!connection) && (!!currentUsername)) {
+            const trimmedInput = currentInput.trim()
+            const trimmedUserName = currentUsername.trim() 
+            
+            const usernameIsInSpec =
+                (trimmedUserName.length > 0)
+                && trimmedUserName.length <= CHAT_LIMITS.MAX_USERNAME_LENGTH
+            
             const inputIsInSpec =
                 (trimmedInput.length > 0)
                 && trimmedInput.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH
 
-            if (inputIsInSpec) {
+            if (inputIsInSpec && usernameIsInSpec) {
                 // !! Não esquecer de sanitizar input no servidor   
-                connection.invoke("SendMessage", currentUser, trimmedInput);
-                setInput("");
+                connection.invoke("SendMessage", currentUsername, trimmedInput);
+                setCurrentInput("");
             }
         }
     }
 
-    const handleReceiveMessage = (receivedUser: string, receivedTextContent: string, receivedTimestamp: string) => {
+    const handleReceiveMessage = (receivedId: string, receivedUsername: string, receivedTextContent: string, receivedTimestamp: string) => {
         // console.log(user, textContent, timestamp);
         const newChatMessage = {
-            user: receivedUser,
+            id: Number(receivedId),
+            username: receivedUsername,
             textContent: receivedTextContent,
             timestamp: new Date(receivedTimestamp),
         }
@@ -83,25 +95,6 @@ export function ChatHub() {
     }
 
     useEffect(() => {
-        // NOTE: estou ciente de que pode ocorrer de fazer fetch de mensagens e
-        // chegarem mensagens no websocket antes do retorno.
-        fetch(
-            ENDPOINT_CHAT_HISTORY, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-       }).then(res => res.json()).then((resJson: UnprocessedChatMessage[]) => {
-            const messages: ChatMessage[] = resJson.map(m => ({
-                user: m.user,
-                textContent: m.textContent,
-                timestamp: new Date(m.timestamp),
-            }));
-
-            setIsFetchingMessages(false);
-            setChatMessages(messages);
-        });
-
         const connection = new signalR.HubConnectionBuilder()
             .withUrl(WEBSOCKET_ADDRESS)
             .withAutomaticReconnect()
@@ -112,6 +105,26 @@ export function ChatHub() {
         connection.start().catch(console.error);
 
         setConnection(connection);
+
+        fetch(
+            ENDPOINT_CHAT_HISTORY, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }).then(res => res.json()).then((resJson: UnprocessedChatMessage[]) => {
+            const messages: ChatMessage[] = resJson.map(m => ({
+                id: m.id,
+                username: m.username,
+                textContent: m.textContent,
+                timestamp: new Date(m.timestamp),
+            }));
+
+            setIsFetchingMessages(false);
+
+            // NOTE(Gustavo): essa operação provavelmente é custosa
+            setChatMessages(prev => [...new Set([...messages, ...prev])]);
+        });
 
         return () => {
             connection.stop();
@@ -141,85 +154,104 @@ export function ChatHub() {
             textareaRef.current.style.height = "auto"; // reset
             textareaRef.current.style.height = textareaRef.current.scrollHeight + "px"; // adjust to content
         }
-    }, [input]); // runs whenever input changes
+    }, [currentInput]); // runs whenever input changes
 
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="relative max-h-[75vh] overflow-y-auto w-full max-w-75/100 bg-white shadow-lg rounded-2xl flex flex-col p-4">
+            <div className="relative max-h-[75vh] w-full max-w-75/100 bg-white shadow-lg rounded-2xl flex flex-col p-4">
                 {/* Floating username */}
                 {/* Limitar tamanho do username */}
                 <input
                     type="text"
-                    className="absolute top-6 right-12 text-sm w-[20ch] font-bold px-2 py-1 border rounded-lg shadow-sm bg-white
+                    className={`absolute top-6 right-12 text-sm w-[20ch] font-bold px-2 py-1 border rounded-lg shadow-sm bg-white
                                 opacity-50
                                 focus:opacity-100
-                                focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="Username"
-                    value={currentUser}
-                    onChange={(e) => setCurrentUser(e.target.value)}
+                                focus:outline-none
+                                focus:ring-2
+                                ${currentUsername.length === 0                                                    && "focus:ring-yellow-400" }
+                                ${0 < currentUsername.length && currentUsername.length <= CHAT_LIMITS.MAX_USERNAME_LENGTH && "focus:ring-blue-400"   }
+                                ${currentUsername.length > CHAT_LIMITS.MAX_USERNAME_LENGTH                            && "focus:ring-red-400"    }
+                                
+                                  
+                            `}
+                    placeholder={`${USER_LOCALE === "pt-BR" ? "(vazio)" : "(empty)"}`}
+                    value={currentUsername}
+                    onChange={(e) => setCurrentUsername(e.target.value)}
                 />
 
                 {/* Messages */}
                 {isFetchingMessages
-                ?
+                    ?
                     <div className="space-y-2">
                         {[...Array(3)].map((_, i) => (
-                        <div key={i} className="p-2 rounded-lg w-fit animate-pulse">
-                            {/* username + timestamp */}
-                            <div className="flex space-x-2 mb-2">
-                            <div className="h-3 w-20 bg-gray-300 rounded"></div>
-                            <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                            <div key={i} className="p-2 rounded-lg w-fit animate-pulse">
+                                {/* username + timestamp */}
+                                <div className="flex space-x-2 mb-2">
+                                    <div className="h-3 w-20 bg-gray-300 rounded"></div>
+                                    <div className="h-3 w-12 bg-gray-200 rounded"></div>
+                                </div>
+                                {/* message lines */}
+                                <div className="space-y-2">
+                                    <div className="h-3 w-64 bg-gray-200 rounded"></div>
+                                    <div className="h-3 w-48 bg-gray-200 rounded"></div>
+                                    <div className="h-3 w-40 bg-gray-200 rounded"></div>
+                                </div>
                             </div>
-                            {/* message lines */}
-                            <div className="space-y-2">
-                            <div className="h-3 w-64 bg-gray-200 rounded"></div>
-                            <div className="h-3 w-48 bg-gray-200 rounded"></div>
-                            <div className="h-3 w-40 bg-gray-200 rounded"></div>
-                            </div>
-                        </div>
                         ))}
                     </div>
-                :
-                    <div
-                        ref={containerRef}
-                        className="flex-1 overflow-y-auto mb-4 space-y-2"
-                        onScroll={handleScroll}
-                    >
-                        {chatMessages
-                            .map(cm => ({ ...cm, timestamp: formattedDate(cm.timestamp) }))
-                            .map((cm, i) => (
-                                <div key={i} className="p-2 rounded-lg text-gray-800 w-fit">
-                                    <div className="text-sm space-x-1">
-                                        <span><b>{cm.user}</b>,</span>
-                                        <span>{cm.timestamp}</span>
+                    :
+                    (chatMessages.length > 0)
+                        ?
+                        <div
+                            ref={containerRef}
+                            className="flex-1 overflow-y-auto mb-4 space-y-2"
+                            onScroll={handleScroll}
+                        >
+                            {chatMessages
+                                .map(cm => ({ ...cm, timestamp: formattedDate(cm.timestamp) }))
+                                .map((cm, i) => (
+                                    <div key={i} className="p-2 rounded-lg text-gray-800 w-fit">
+                                        <div className="text-sm space-x-1">
+                                            <span><b>{cm.username}</b>,</span>
+                                            <span>{cm.timestamp}</span>
+                                        </div>
+                                        <div className="break-words break-all whitespace-pre-wrap">{cm.textContent}</div>
                                     </div>
-                                    <div className="break-words break-all whitespace-pre-wrap">{cm.textContent}</div>
-                                </div>
-                            ))}
-                        <div ref={messagesEndRef} />
-                    </div>
+                                ))}
+                            <div ref={messagesEndRef} />
+                        </div>
+                        :
+                        <div
+                            ref={containerRef}
+                            className="flex-1 overflow-y-auto mb-4 flex flex-col items-center justify-center"
+                            onScroll={handleScroll}
+                        >
+                            <div className="p-2 rounded-lg text-center">
+                                <div className="italic mt-10 text-gray-400">Seja o primeiro a enviar uma mensagem nesse chat</div>
+                            </div>
+                            <div ref={messagesEndRef} />
+                        </div>
+
                 }
                 <div className="flex items-center space-x-2">
                     <textarea
                         ref={textareaRef}
                         className={
                             `flex-1 rounded-2xl border border-gray-300 px-4 py-2 resize-none overflow-y-auto max-h-[10vh] min-h-11 focus:outline-none focus:ring-2
-                            ${input.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH ? `focus:ring-blue-500` : `focus:ring-red-500`}
+                            ${currentInput.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH ? `focus:ring-blue-500` : `focus:ring-red-500`}
                             `
                         }
-                        value={input}
+                        value={currentInput}
                         onChange={(e) => {
-                            setInput(e.target.value);
+                            setCurrentInput(e.target.value);
                             e.currentTarget.style.height = "auto";       // reset height
                             e.currentTarget.style.height = e.currentTarget.scrollHeight + "px"; // expand
                         }}
                         onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                                 e.preventDefault();
-                                if (input.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH) {
-                                    handleSendMessage();
-                                }
+                                handleSendMessage();
                             }
                         }}
                         placeholder={USER_LOCALE === "pt-BR" ? "Digite uma mensagem..." : "Type a message..."}
@@ -233,8 +265,6 @@ export function ChatHub() {
                         {"\u27A4"}
                     </button>
                 </div>
-                <p>ENDPOINT_GET_CHAT_HISTORY: {ENDPOINT_CHAT_HISTORY}</p>
-                <p>WEBSOCKET_ADDRESS: {WEBSOCKET_ADDRESS}</p>
             </div>
         </div>
     );

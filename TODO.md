@@ -1,0 +1,10 @@
+- CI/CD
+- Melhorar visual
+- Múltiplos chats
+- Permitir customizar visual
+- Métricas com grafana
+- Filtrar spam
+- Bloquear IP
+- Visão admin
+- Permitir citar/responder
+- Shader

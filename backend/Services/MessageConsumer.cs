@@ -54,13 +54,11 @@ public class MessageConsumer : IAsyncDisposable
             await Task.CompletedTask; // requerido porque o delegate é async
         };
 
-        var consumerTag = await _channel.BasicConsumeAsync(
+        await _channel.BasicConsumeAsync(
             queue: "chat",
             autoAck: true,
             consumer: consumer
         );
-
-        Console.WriteLine($"Consumer iniciado com tag {consumerTag}");
     }
 
 
