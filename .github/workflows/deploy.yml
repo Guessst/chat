@@ -40,5 +40,5 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /home/${{ secrets.VPS_USER }}/chat
-            docker compose -f docker-compose.yml pull
-            docker compose -f docker-compose.yml up -d
+            docker compose -f docker-compose.yml -f docker-compose.production.yml --env-file .env.production pull
+            docker compose -f docker-compose.yml -f docker-compose.production.yml --env-file .env.production up -d

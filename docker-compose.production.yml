@@ -1,0 +1,10 @@
+services:
+  backend:
+    build:
+      context: .
+    image: guessst/chat-backend:latest
+  
+  frontend:
+    build:
+      context: .
+    image: guessst/chat-frontend:latest

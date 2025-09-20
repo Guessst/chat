@@ -2,8 +2,6 @@ services:
   db:
     image: postgres:17
     restart: always
-    env_file:
-      - ".env.production"
     environment:
       POSTGRES_DB: ${ENV_POSTGRES_DB}
       POSTGRES_USER: ${ENV_POSTGRES_USER}
@@ -15,8 +13,6 @@ services:
 
   rabbitmq:
     image: rabbitmq:4-management
-    env_file:
-      - ".env.production"
     environment:
       RABBITMQ_DEFAULT_USER: ${ENV_RABBIT_MQ_USER}
       RABBITMQ_DEFAULT_PASS: ${ENV_RABBIT_MQ_PASS}
@@ -39,9 +35,14 @@ services:
         condition: service_started # todo healthcheck
       rabbitmq:
         condition: service_healthy
-    env_file:
-      - ".env.production"
     environment:
+      ENV_RABBIT_MQ_HOSTNAME: ${ENV_RABBIT_MQ_HOSTNAME}
+      ENV_RABBIT_MQ_USER: ${ENV_RABBIT_MQ_USER}
+      ENV_RABBIT_MQ_PASS: ${ENV_RABBIT_MQ_PASS}
+      ENV_POSTGRES_HOST: ${ENV_POSTGRES_HOST}
+      ENV_POSTGRES_DB: ${ENV_POSTGRES_DB}
+      ENV_POSTGRES_USER: ${ENV_POSTGRES_USER}
+      ENV_POSTGRES_PASSWORD: ${ENV_POSTGRES_PASSWORD}
       ASPNETCORE_ENVIRONMENT: ${ENV_ASPNETCORE_ENVIRONMENT}
     ports:
       - "8080:8080"
@@ -50,8 +51,6 @@ services:
     build: ./frontend
     depends_on:
       - backend
-    env_file:
-      - ".env.production"
     ports:
       - "80:80"
 

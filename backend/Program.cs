@@ -28,6 +28,7 @@ builder.Services.AddSignalR();
     if (!string.IsNullOrEmpty(environmentName) && environmentName == "Development")
     {
         DotNetEnv.Env.Load(path: "../.env.development");
+        Console.WriteLine("::::::::Loaded env file.");
     }
 }
 { // Init RabbitMQ config from env variables

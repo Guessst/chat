@@ -1,5 +1,5 @@
 import * as signalR from "@microsoft/signalr";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ENDPOINT_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
 
 const CHAT_LIMITS = {
@@ -18,6 +18,13 @@ interface ChatMessage {
 }
 
 interface UnprocessedChatMessage {
+    id: number
+    username: string
+    textContent: string
+    timestamp: string
+}
+
+interface FormattedChatMessage {
     id: number
     username: string
     textContent: string
@@ -49,7 +56,91 @@ function useLocalStorage(key: string, initialValue: string) {
     return [value, setValue] as const;
 }
 
-export function ChatHub() {
+const MessageItem = ({formattedMessage}: {formattedMessage: FormattedChatMessage}) => {
+    return (
+        <div key={formattedMessage.id} className="p-2 rounded-lg text-gray-800 w-fit">
+            <div className="text-sm space-x-1">
+                <span><b>{formattedMessage.username}</b>,</span>
+                <span>{formattedMessage.timestamp}</span>
+            </div>
+            <div className="break-words break-all whitespace-pre-wrap">{formattedMessage.textContent}</div>
+        </div>
+    )
+}
+
+const MessageSkeleton = ({key}: {key: React.Key}) => {
+    return (
+        <div key={key} className="p-2 rounded-lg w-fit animate-pulse">
+            {/* username + timestamp */}
+            <div className="flex space-x-2 mb-2">
+                <div className="h-3 w-20 bg-gray-300 rounded"></div>
+                <div className="h-3 w-12 bg-gray-200 rounded"></div>
+            </div>
+            {/* message lines */}
+            <div className="space-y-2">
+                <div className="h-3 w-64 bg-gray-200 rounded"></div>
+                <div className="h-3 w-48 bg-gray-200 rounded"></div>
+                <div className="h-3 w-40 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+    )
+}
+
+interface ChatMessagesContentInterface {
+    isFetchingMessages: boolean
+    formattedMessages: FormattedChatMessage[]
+    containerRef: React.Ref<HTMLDivElement>
+    messagesEndRef: React.Ref<HTMLDivElement>
+    handleScroll: () => void
+}
+
+// Skeleton OR empty OR messages list
+const ChatMessagesContent = ({
+    isFetchingMessages,
+    formattedMessages,
+    containerRef,
+    messagesEndRef,
+    handleScroll,
+}: ChatMessagesContentInterface) => {
+    if(isFetchingMessages) {
+        return (
+            <div className="space-y-2">
+                {[...Array(3)].map((_, i) => (< MessageSkeleton key={i} />))}
+            </div>
+        )
+    }
+
+    if(formattedMessages.length === 0) {
+        return (
+            <div
+                ref={containerRef}
+                className="flex-1 overflow-y-auto mb-4 flex flex-col items-center justify-center"
+                onScroll={handleScroll}
+            >
+                <div className="p-2 rounded-lg text-center">
+                    <div className="italic mt-10 text-gray-400">Seja o primeiro a enviar uma mensagem nesse chat</div>
+                </div>
+                <div ref={messagesEndRef} />
+            </div>
+        )
+    }
+
+    return (
+        <div
+            ref={containerRef}
+            className="flex-1 overflow-y-auto mb-4 space-y-2"
+            onScroll={handleScroll}
+        >
+            {formattedMessages
+                .map(cm => (<MessageItem formattedMessage={cm}/>
+            
+            ))}
+            <div ref={messagesEndRef} />
+        </div>
+    )
+}
+
+export const ChatHub = () => {
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
     const [currentUsername, setCurrentUsername] = useLocalStorage("username", USER_LOCALE === "pt-BR" ? "Usuário" : "User")
@@ -59,6 +150,11 @@ export function ChatHub() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const formattedMessages: FormattedChatMessage[] = useMemo(
+        () => chatMessages.map(cm => ({ ...cm, timestamp: formattedDate(cm.timestamp) })),
+        [chatMessages]
+    );
 
     // ----------------------------------
     // CONNECTION-RELATED FUNCTIONS/HOOKS
@@ -84,7 +180,6 @@ export function ChatHub() {
     }
 
     const handleReceiveMessage = (receivedId: string, receivedUsername: string, receivedTextContent: string, receivedTimestamp: string) => {
-        // console.log(user, textContent, timestamp);
         const newChatMessage = {
             id: Number(receivedId),
             username: receivedUsername,
@@ -161,7 +256,6 @@ export function ChatHub() {
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
             <div className="relative max-h-[75vh] w-full max-w-75/100 bg-white shadow-lg rounded-2xl flex flex-col p-4">
                 {/* Floating username */}
-                {/* Limitar tamanho do username */}
                 <input
                     type="text"
                     className={`absolute top-6 right-12 text-sm w-[20ch] font-bold px-2 py-1 border rounded-lg shadow-sm bg-white
@@ -169,9 +263,10 @@ export function ChatHub() {
                                 focus:opacity-100
                                 focus:outline-none
                                 focus:ring-2
-                                ${currentUsername.length === 0                                                    && "focus:ring-yellow-400" }
+                                ${{/* Limitar tamanho do username */}}
+                                ${currentUsername.length === 0                                                            && "focus:ring-yellow-400" }
                                 ${0 < currentUsername.length && currentUsername.length <= CHAT_LIMITS.MAX_USERNAME_LENGTH && "focus:ring-blue-400"   }
-                                ${currentUsername.length > CHAT_LIMITS.MAX_USERNAME_LENGTH                            && "focus:ring-red-400"    }
+                                ${currentUsername.length > CHAT_LIMITS.MAX_USERNAME_LENGTH                                && "focus:ring-red-400"    }
                                 
                                   
                             `}
@@ -180,60 +275,14 @@ export function ChatHub() {
                     onChange={(e) => setCurrentUsername(e.target.value)}
                 />
 
-                {/* Messages */}
-                {isFetchingMessages
-                    ?
-                    <div className="space-y-2">
-                        {[...Array(3)].map((_, i) => (
-                            <div key={i} className="p-2 rounded-lg w-fit animate-pulse">
-                                {/* username + timestamp */}
-                                <div className="flex space-x-2 mb-2">
-                                    <div className="h-3 w-20 bg-gray-300 rounded"></div>
-                                    <div className="h-3 w-12 bg-gray-200 rounded"></div>
-                                </div>
-                                {/* message lines */}
-                                <div className="space-y-2">
-                                    <div className="h-3 w-64 bg-gray-200 rounded"></div>
-                                    <div className="h-3 w-48 bg-gray-200 rounded"></div>
-                                    <div className="h-3 w-40 bg-gray-200 rounded"></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    :
-                    (chatMessages.length > 0)
-                        ?
-                        <div
-                            ref={containerRef}
-                            className="flex-1 overflow-y-auto mb-4 space-y-2"
-                            onScroll={handleScroll}
-                        >
-                            {chatMessages
-                                .map(cm => ({ ...cm, timestamp: formattedDate(cm.timestamp) }))
-                                .map((cm, i) => (
-                                    <div key={i} className="p-2 rounded-lg text-gray-800 w-fit">
-                                        <div className="text-sm space-x-1">
-                                            <span><b>{cm.username}</b>,</span>
-                                            <span>{cm.timestamp}</span>
-                                        </div>
-                                        <div className="break-words break-all whitespace-pre-wrap">{cm.textContent}</div>
-                                    </div>
-                                ))}
-                            <div ref={messagesEndRef} />
-                        </div>
-                        :
-                        <div
-                            ref={containerRef}
-                            className="flex-1 overflow-y-auto mb-4 flex flex-col items-center justify-center"
-                            onScroll={handleScroll}
-                        >
-                            <div className="p-2 rounded-lg text-center">
-                                <div className="italic mt-10 text-gray-400">Seja o primeiro a enviar uma mensagem nesse chat</div>
-                            </div>
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                }
+                <ChatMessagesContent
+                    isFetchingMessages={isFetchingMessages}
+                    formattedMessages={formattedMessages}
+                    containerRef={containerRef}
+                    messagesEndRef={messagesEndRef}
+                    handleScroll={handleScroll}
+                />
+                
                 <div className="flex items-center space-x-2">
                     <textarea
                         ref={textareaRef}
