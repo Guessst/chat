@@ -1,6 +1,12 @@
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ENDPOINT_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
+// import Cube from "./Cube";
+
+import CRTWrapper from "./CRTWrapper";
+import Emojis from "./Emojis";
+import { SettingsDialog } from "./SettingsDialog";
+// import Cube from "./Cube";
 
 const CHAT_LIMITS = {
     MAX_MESSAGE_LENGTH: 2000,
@@ -58,7 +64,7 @@ function useLocalStorage(key: string, initialValue: string) {
 
 const MessageItem = ({formattedMessage}: {formattedMessage: FormattedChatMessage}) => {
     return (
-        <div key={formattedMessage.id} className="p-2 rounded-lg text-gray-800 w-fit">
+        <div key={formattedMessage.id} className="p-2 text-gray-800 w-full">
             <div className="text-sm space-x-1">
                 <span><b>{formattedMessage.username}</b>,</span>
                 <span>{formattedMessage.timestamp}</span>
@@ -147,10 +153,11 @@ export const ChatHub = () => {
     const [currentInput, setCurrentInput] = useState<string>("");
     const [isAtBottom, setIsAtBottom] = useState(true);
     const [isFetchingMessages, setIsFetchingMessages] = useState(true);
+    // const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-
+    
     const formattedMessages: FormattedChatMessage[] = useMemo(
         () => chatMessages.map(cm => ({ ...cm, timestamp: formattedDate(cm.timestamp) })),
         [chatMessages]
@@ -244,6 +251,27 @@ export const ChatHub = () => {
 
 
     // TEXT-AREA RELATED
+    const insertAtCursor = (emoji: string) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+
+        // Insert emoji at cursor position
+        const newInput =
+            currentInput.substring(0, start) + emoji + currentInput.substring(end);
+
+        setCurrentInput(newInput);
+
+        // Restore focus & move cursor right after the inserted emoji
+        requestAnimationFrame(() => {
+            textarea.focus();
+            const cursorPos = start + emoji.length;
+            textarea.setSelectionRange(cursorPos, cursorPos);
+        });
+    };
+
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto"; // reset
@@ -253,13 +281,39 @@ export const ChatHub = () => {
 
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="relative max-h-[75vh] w-full max-w-75/100 bg-white shadow-lg rounded-2xl flex flex-col p-4">
+        <div>
+        
+        {/* CRT Test */}
+
+        <CRTWrapper>
+        <div className="">
+            
+            <div className="h-40 w-full flex justify-center items-center">
+                <div className="center w-1/2 h-1/2 flex flex-col justify-center items-center">
+                <div className="backdrop-blur-md">
+                    <h1 className="text-center font-[UnifontExMono]">Inter日本語</h1>
+                    <h1 className="text-center font-inter font-bold">Inter (sans)</h1>
+                </div>
+                    <SettingsDialog></SettingsDialog>
+                </div>
+            </div>
+        </div>
+
+        
+        </CRTWrapper>
+        {/* <Cube></Cube> */}
+
+        <div className="flex items-center justify-center min-h-screen bg-gray-100 font-inter">
+            <div className={`
+                relative bg-white shadow-lg rounded-2xl flex flex-col
+                w-full md:max-w-9/10 p-8
+                max-h-[100vh] md:max-h-[90vh]
+                `}>
                 {/* Floating username */}
                 <input
                     type="text"
                     className={`absolute top-6 right-12 text-sm w-[20ch] font-bold px-2 py-1 border rounded-lg shadow-sm bg-white
-                                opacity-50
+                                opacity-30
                                 focus:opacity-100
                                 focus:outline-none
                                 focus:ring-2
@@ -270,9 +324,10 @@ export const ChatHub = () => {
                                 
                                   
                             `}
-                    placeholder={`${USER_LOCALE === "pt-BR" ? "(vazio)" : "(empty)"}`}
+                    placeholder={`${USER_LOCALE === "pt-BR" ? "Vazio" : "Empty"}`}
                     value={currentUsername}
                     onChange={(e) => setCurrentUsername(e.target.value)}
+                    spellCheck={false}
                 />
 
                 <ChatMessagesContent
@@ -287,7 +342,8 @@ export const ChatHub = () => {
                     <textarea
                         ref={textareaRef}
                         className={
-                            `flex-1 rounded-2xl border border-gray-300 px-4 py-2 resize-none overflow-y-auto max-h-[10vh] min-h-11 focus:outline-none focus:ring-2
+                            `
+                            flex-1 rounded-2xl border border-gray-300 px-4 py-2 resize-none overflow-y-auto max-h-[10vh] min-h-11 focus:outline-none focus:ring-2
                             ${currentInput.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH ? `focus:ring-blue-500` : `focus:ring-red-500`}
                             `
                         }
@@ -306,7 +362,8 @@ export const ChatHub = () => {
                         placeholder={USER_LOCALE === "pt-BR" ? "Digite uma mensagem..." : "Type a message..."}
                         rows={1}
                     />
-
+                    
+                        <Emojis insertAtCursor={insertAtCursor} ></Emojis>
                     <button
                         onClick={handleSendMessage}
                         className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 hover:cursor-pointer"
@@ -315,6 +372,7 @@ export const ChatHub = () => {
                     </button>
                 </div>
             </div>
+        </div>
         </div>
     );
 }

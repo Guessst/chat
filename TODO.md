@@ -1,10 +1,9 @@
-- CI/CD
-- Melhorar visual
-- Múltiplos chats
-- Permitir customizar visual
+- Arrumar para docker.compose vir da repo
+- Melhorar visual (escolher temas por ex. vaporwave/synthwave)
 - Métricas com grafana
+- Múltiplos chats
 - Filtrar spam
-- Bloquear IP
+- Permitir bloquear IP
 - Visão admin
 - Permitir citar/responder
-- Shader
+- Shader/3D/firulas
