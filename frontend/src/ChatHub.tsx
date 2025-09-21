@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ENDPOINT_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
 // import Cube from "./Cube";
 
-import CRTWrapper from "./CRTWrapper";
 import Emojis from "./Emojis";
 import { SettingsDialog } from "./SettingsDialog";
+import CustomSnippetsInput from "./CustomSnippetsInput";
 // import Cube from "./Cube";
 
 const CHAT_LIMITS = {
@@ -124,7 +124,7 @@ const ChatMessagesContent = ({
                 onScroll={handleScroll}
             >
                 <div className="p-2 rounded-lg text-center">
-                    <div className="italic mt-10 text-gray-400">Seja o primeiro a enviar uma mensagem nesse chat</div>
+                    <div className="italic mt-10 text-gray-400">Be the first to send a message in this chat</div>
                 </div>
                 <div ref={messagesEndRef} />
             </div>
@@ -149,7 +149,7 @@ const ChatMessagesContent = ({
 export const ChatHub = () => {
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-    const [currentUsername, setCurrentUsername] = useLocalStorage("username", USER_LOCALE === "pt-BR" ? "Usuário" : "User")
+    const [currentUsername, setCurrentUsername] = useLocalStorage("username", "Anonymous")
     const [currentInput, setCurrentInput] = useState<string>("");
     const [isAtBottom, setIsAtBottom] = useState(true);
     const [isFetchingMessages, setIsFetchingMessages] = useState(true);
@@ -282,17 +282,18 @@ export const ChatHub = () => {
 
     return (
         <div>
-        
-        {/* CRT Test */}
-
-        <CRTWrapper>
         <div className="">
             
             <div className="h-40 w-full flex justify-center items-center">
                 <div className="center w-1/2 h-1/2 flex flex-col justify-center items-center">
-                <div className="backdrop-blur-md">
+                <div className="backdrop-blur-md bg-green-500">
                     <h1 className="text-center font-[UnifontExMono]">Inter日本語</h1>
-                    <h1 className="text-center font-inter font-bold">Inter (sans)</h1>
+                    <h1 className="text-center font-inter italic">Inter (sans)</h1>
+                    <h1 className="text-8xl font-inter italic font-extrabold tracking-tight 
+                                bg-gradient-to-r from-blue-500 to-purple-500 
+                                bg-clip-text text-transparent">
+                    Kaos Chat
+                    </h1>
                 </div>
                     <SettingsDialog></SettingsDialog>
                 </div>
@@ -300,8 +301,10 @@ export const ChatHub = () => {
         </div>
 
         
-        </CRTWrapper>
-        {/* <Cube></Cube> */}
+        <div className="text-center w-fit">
+        
+        </div>
+
 
         <div className="flex items-center justify-center min-h-screen bg-gray-100 font-inter">
             <div className={`
@@ -362,7 +365,7 @@ export const ChatHub = () => {
                         placeholder={USER_LOCALE === "pt-BR" ? "Digite uma mensagem..." : "Type a message..."}
                         rows={1}
                     />
-                    
+                        <CustomSnippetsInput></CustomSnippetsInput>
                         <Emojis insertAtCursor={insertAtCursor} ></Emojis>
                     <button
                         onClick={handleSendMessage}
