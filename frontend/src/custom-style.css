@@ -1,0 +1,24 @@
+
+/* Custom CSS for CRT and glitch effects */
+/* body {
+    font-family: 'VT323', monospace;
+} */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/InterVariable.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/InterVariable-Italic.woff2") format("woff2-variations");
+}
+
+@theme inline {
+  --font-inter: "Inter", var(--font-sans);
+}

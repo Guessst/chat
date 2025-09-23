@@ -1,11 +1,11 @@
 import * as signalR from "@microsoft/signalr";
+import { ArrowBigRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ENDPOINT_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
+import { CHAT_LIMITS } from "./constants";
+import Emojis from "./Emojis";
+import { SettingsDialog } from "./SettingsDialog";
 
-const CHAT_LIMITS = {
-    MAX_MESSAGE_LENGTH: 2000,
-    MAX_USERNAME_LENGTH: 20,
-}
 const USER_LOCALE = navigator.language || navigator.languages[0];
 
 // const IS_DEV = import.meta.env.DEV === true
@@ -56,9 +56,9 @@ function useLocalStorage(key: string, initialValue: string) {
     return [value, setValue] as const;
 }
 
-const MessageItem = ({formattedMessage}: {formattedMessage: FormattedChatMessage}) => {
+const MessageItem = ({ formattedMessage }: { formattedMessage: FormattedChatMessage }) => {
     return (
-        <div key={formattedMessage.id} className="p-2 rounded-lg text-gray-800 w-fit">
+        <div key={formattedMessage.id} className="p-2 text-gray-800 w-full">
             <div className="text-sm space-x-1">
                 <span><b>{formattedMessage.username}</b>,</span>
                 <span>{formattedMessage.timestamp}</span>
@@ -68,7 +68,7 @@ const MessageItem = ({formattedMessage}: {formattedMessage: FormattedChatMessage
     )
 }
 
-const MessageSkeleton = ({key}: {key: React.Key}) => {
+const MessageSkeleton = ({ key }: { key: React.Key }) => {
     return (
         <div key={key} className="p-2 rounded-lg w-fit animate-pulse">
             {/* username + timestamp */}
@@ -102,7 +102,7 @@ const ChatMessagesContent = ({
     messagesEndRef,
     handleScroll,
 }: ChatMessagesContentInterface) => {
-    if(isFetchingMessages) {
+    if (isFetchingMessages) {
         return (
             <div className="space-y-2">
                 {[...Array(3)].map((_, i) => (< MessageSkeleton key={i} />))}
@@ -110,7 +110,7 @@ const ChatMessagesContent = ({
         )
     }
 
-    if(formattedMessages.length === 0) {
+    if (formattedMessages.length === 0) {
         return (
             <div
                 ref={containerRef}
@@ -118,7 +118,7 @@ const ChatMessagesContent = ({
                 onScroll={handleScroll}
             >
                 <div className="p-2 rounded-lg text-center">
-                    <div className="italic mt-10 text-gray-400">Seja o primeiro a enviar uma mensagem nesse chat</div>
+                    <div className="italic mt-10 text-gray-400">Be the first to send a message in this chat</div>
                 </div>
                 <div ref={messagesEndRef} />
             </div>
@@ -132,9 +132,9 @@ const ChatMessagesContent = ({
             onScroll={handleScroll}
         >
             {formattedMessages
-                .map(cm => (<MessageItem formattedMessage={cm}/>
-            
-            ))}
+                .map(cm => (<MessageItem formattedMessage={cm} />
+
+                ))}
             <div ref={messagesEndRef} />
         </div>
     )
@@ -143,10 +143,11 @@ const ChatMessagesContent = ({
 export const ChatHub = () => {
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-    const [currentUsername, setCurrentUsername] = useLocalStorage("username", USER_LOCALE === "pt-BR" ? "Usuário" : "User")
+    const [currentUsername, setCurrentUsername] = useLocalStorage("username", "Anonymous")
     const [currentInput, setCurrentInput] = useState<string>("");
     const [isAtBottom, setIsAtBottom] = useState(true);
     const [isFetchingMessages, setIsFetchingMessages] = useState(true);
+    // const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -161,12 +162,12 @@ export const ChatHub = () => {
     const handleSendMessage = () => {
         if ((!!connection) && (!!currentUsername)) {
             const trimmedInput = currentInput.trim()
-            const trimmedUserName = currentUsername.trim() 
-            
+            const trimmedUserName = currentUsername.trim()
+
             const usernameIsInSpec =
                 (trimmedUserName.length > 0)
                 && trimmedUserName.length <= CHAT_LIMITS.MAX_USERNAME_LENGTH
-            
+
             const inputIsInSpec =
                 (trimmedInput.length > 0)
                 && trimmedInput.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH
@@ -244,6 +245,27 @@ export const ChatHub = () => {
 
 
     // TEXT-AREA RELATED
+    const insertAtCursor = (emoji: string) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+
+        // Insert emoji at cursor position
+        const newInput =
+            currentInput.substring(0, start) + emoji + currentInput.substring(end);
+
+        setCurrentInput(newInput);
+
+        // Restore focus & move cursor right after the inserted emoji
+        requestAnimationFrame(() => {
+            textarea.focus();
+            const cursorPos = start + emoji.length;
+            textarea.setSelectionRange(cursorPos, cursorPos);
+        });
+    };
+
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto"; // reset
@@ -253,66 +275,72 @@ export const ChatHub = () => {
 
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="relative max-h-[75vh] w-full max-w-75/100 bg-white shadow-lg rounded-2xl flex flex-col p-4">
-                {/* Floating username */}
-                <input
-                    type="text"
-                    className={`absolute top-6 right-12 text-sm w-[20ch] font-bold px-2 py-1 border rounded-lg shadow-sm bg-white
-                                opacity-50
-                                focus:opacity-100
-                                focus:outline-none
-                                focus:ring-2
-                                ${{/* Limitar tamanho do username */}}
-                                ${currentUsername.length === 0                                                            && "focus:ring-yellow-400" }
-                                ${0 < currentUsername.length && currentUsername.length <= CHAT_LIMITS.MAX_USERNAME_LENGTH && "focus:ring-blue-400"   }
-                                ${currentUsername.length > CHAT_LIMITS.MAX_USERNAME_LENGTH                                && "focus:ring-red-400"    }
-                                
-                                  
-                            `}
-                    placeholder={`${USER_LOCALE === "pt-BR" ? "(vazio)" : "(empty)"}`}
-                    value={currentUsername}
-                    onChange={(e) => setCurrentUsername(e.target.value)}
-                />
+        <div>
+            <div className="flex justify-center items-center h-30">
+                    <h1 className="text-8xl font-inter font-extrabold
+                                bg-gradient-to-r from-blue-500 to-purple-500 
+                                bg-clip-text text-transparent">
+                        The Chat™
+                    </h1>
+            </div>
+            <div className="flex items-center justify-center">
+                <div className={`
+                relative bg-white shadow-lg rounded-2xl flex flex-col
+                w-full md:max-w-9/10 p-8
+                max-h-[80vh] md:max-h-[80vh]
+                `}> {/* TODO: fix mobile height */}
+                    <SettingsDialog setCurrentUsername={setCurrentUsername} currentUsername={currentUsername} />
 
-                <ChatMessagesContent
-                    isFetchingMessages={isFetchingMessages}
-                    formattedMessages={formattedMessages}
-                    containerRef={containerRef}
-                    messagesEndRef={messagesEndRef}
-                    handleScroll={handleScroll}
-                />
-                
-                <div className="flex items-center space-x-2">
-                    <textarea
-                        ref={textareaRef}
-                        className={
-                            `flex-1 rounded-2xl border border-gray-300 px-4 py-2 resize-none overflow-y-auto max-h-[10vh] min-h-11 focus:outline-none focus:ring-2
-                            ${currentInput.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH ? `focus:ring-blue-500` : `focus:ring-red-500`}
-                            `
-                        }
-                        value={currentInput}
-                        onChange={(e) => {
-                            setCurrentInput(e.target.value);
-                            e.currentTarget.style.height = "auto";       // reset height
-                            e.currentTarget.style.height = e.currentTarget.scrollHeight + "px"; // expand
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSendMessage();
-                            }
-                        }}
-                        placeholder={USER_LOCALE === "pt-BR" ? "Digite uma mensagem..." : "Type a message..."}
-                        rows={1}
+                    <ChatMessagesContent
+                        isFetchingMessages={isFetchingMessages}
+                        formattedMessages={formattedMessages}
+                        containerRef={containerRef}
+                        messagesEndRef={messagesEndRef}
+                        handleScroll={handleScroll}
                     />
 
-                    <button
-                        onClick={handleSendMessage}
-                        className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 hover:cursor-pointer"
-                    >
-                        {"\u27A4"}
-                    </button>
+                    <div className="flex items-center space-x-2">
+                        <div className={
+                            `flex w-full items-center p-1
+                        border border-gray-300 rounded-2xl focus-within:ring-2 focus-within:outline-none
+                        ${currentInput.length <= CHAT_LIMITS.MAX_MESSAGE_LENGTH ? `focus-within:ring-blue-500` : `focus-within:ring-red-500`}
+                        `
+                        }>
+                            <textarea
+                                ref={textareaRef}
+                                className={
+                                    `
+                            w-full flex px-4 py-2 resize-none overflow-y-auto max-h-[10vh] min-h-11 
+                            focus:outline-none focus:border-none
+                            `
+                                }
+                                value={currentInput}
+                                onChange={(e) => {
+                                    setCurrentInput(e.target.value);
+                                    e.currentTarget.style.height = "auto";       // reset height
+                                    e.currentTarget.style.height = e.currentTarget.scrollHeight + "px"; // expand
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSendMessage();
+                                    }
+                                }}
+                                placeholder="Type a message..."
+                                rows={1}
+                            />
+                            <Emojis insertAtCursor={insertAtCursor} ></Emojis>
+                        </div>
+
+                        {/* <CustomSnippetsInput></CustomSnippetsInput> */}
+                        <button
+                            onClick={handleSendMessage}
+                            className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 hover:cursor-pointer"
+                        >
+                            <ArrowBigRight fill="white" size={22} className="scale-x-120" />
+                            {/* {"\u27A4"} */}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

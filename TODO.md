@@ -1,10 +1,13 @@
-- CI/CD
 - Melhorar visual
-- Múltiplos chats
-- Permitir customizar visual
-- Métricas com grafana
-- Filtrar spam
-- Bloquear IP
-- Visão admin
+-- acomodar layout corretamente no mobile
+-- tema escuro
+-- temas diferenciados por ex. vaporwave/synthwave
+- Emoticon
 - Permitir citar/responder
-- Shader
+- Menu de opções
+- Métricas com grafana
+- Múltiplos chats
+- Filtrar spam
+- Permitir bloquear IP
+- Visão admin
+- Shader/3D/firulas

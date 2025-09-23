@@ -62,9 +62,6 @@ public class ChatHub : Hub
         if (textContent.Length > ChatLimits.MaxMessageLength)
             throw new ArgumentException($"Message cannot exceed {ChatLimits.MaxMessageLength} characters");
 
-        // Basic sanitization: encode HTML
-        textContent = System.Net.WebUtility.HtmlEncode(textContent);
-
         return (username.Trim(), textContent.Trim());
     }
 }
