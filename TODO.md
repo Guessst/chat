@@ -14,3 +14,4 @@
 - Visão admin
 - Shader/3D/firulas
 - Localização/idioma
+- Performance Pagespeed
