@@ -2,12 +2,15 @@
 -- acomodar layout corretamente no mobile
 -- tema escuro
 -- temas diferenciados por ex. vaporwave/synthwave
-- Emoticon
+-- Digitação "flúida"
+- Kaomoji/caules
 - Permitir citar/responder
-- Menu de opções
-- Métricas com grafana
+- Mostrar infos em tempo real por ex. usuários online
+- Métricas com grafana/prometheus
 - Múltiplos chats
+- mudar domínio para 'chat.gustavoqueiroz.dev'
 - Filtrar spam
 - Permitir bloquear IP
 - Visão admin
 - Shader/3D/firulas
+- Localização/idioma
