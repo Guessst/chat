@@ -18,15 +18,15 @@ export default function Page({ insertAtCursor }: { insertAtCursor: (emoji: strin
 
   return (<Popover onOpenChange={setIsOpen} open={isOpen} >
     <PopoverTrigger asChild>
-      <Button className="hover:cursor-pointer" variant="ghost" size="icon">
-        <Smile />
+      <Button className="hover:cursor-pointer p-1" variant="ghost" asChild>
+        <Smile size={28} />
       </Button>
     </PopoverTrigger>
 
     <PopoverContent
       align="end"        // aligns right edge of popover with right edge of trigger
       sideOffset={8}     // pushes it away a bit so it doesn’t overlap
-      className="w-fit p-0"
+      className="w-fit p-0 mb-2 shadow-none"
     >
       <EmojiPicker
         className="h-[342px]"

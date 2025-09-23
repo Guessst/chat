@@ -1,14 +1,20 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogOverlay, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogOverlay, DialogTitle } from "@/components/ui/dialog";
 import { Settings } from "lucide-react";
+import { useState } from "react";
+import { CHAT_LIMITS } from "./constants";
 
-export function SettingsDialog() {
+interface SettingsDialogInterface {
+  currentUsername: string
+  setCurrentUsername: React.Dispatch<React.SetStateAction<string>>
+}
+
+export function SettingsDialog({currentUsername, setCurrentUsername}: SettingsDialogInterface) {
   const [open, setOpen] = useState(false);
 
   return (
     <div className="absolute top-8 right-16">
-      <Button className="hover:cursor-pointer p-2" variant="outline" asChild>
+      <Button className="hover:cursor-pointer p-2 shadow-none" variant="outline" asChild>
         <Settings className="w-10 h-10" onClick={() => setOpen(true)} />
       </Button>
 
@@ -18,22 +24,26 @@ export function SettingsDialog() {
 
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>User Settings</DialogTitle>
+            <DialogTitle>Username</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Theme</label>
-              <select className="mt-1 block w-full rounded-md border border-input bg-background p-2 text-sm">
-                <option>Light</option>
-                <option>Dark</option>
-                <option>System</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Font Size</label>
-              <input type="range" min={12} max={24} className="w-full" />
-            </div>
+            {/* username */}
+            <input
+                type="text"
+                className={`text-sm w-[${CHAT_LIMITS.MAX_USERNAME_LENGTH}ch] px-2 py-1 border rounded-lg bg-white
+                        focus:outline-none
+                        focus:ring-2
+                        ${{/* Limitar tamanho do username */ }}
+                        ${currentUsername.length === 0 && "focus:ring-yellow-400"}
+                        ${0 < currentUsername.length && currentUsername.length <= CHAT_LIMITS.MAX_USERNAME_LENGTH && "focus:ring-blue-400"}
+                        ${currentUsername.length > CHAT_LIMITS.MAX_USERNAME_LENGTH && "focus:ring-red-400"}          
+                    `}
+                placeholder="Empty"
+                value={currentUsername}
+                onChange={(e) => setCurrentUsername(e.target.value)}
+                spellCheck={false}
+            />
           </div>
         </DialogContent>
       </Dialog>

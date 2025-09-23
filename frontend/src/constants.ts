@@ -1,0 +1,4 @@
+export const CHAT_LIMITS = {
+    MAX_MESSAGE_LENGTH: 2000,
+    MAX_USERNAME_LENGTH: 20,
+}

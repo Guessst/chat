@@ -1,13 +1,11 @@
 import * as signalR from "@microsoft/signalr";
+import { ArrowBigRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ENDPOINT_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
+import { CHAT_LIMITS } from "./constants";
 import Emojis from "./Emojis";
 import { SettingsDialog } from "./SettingsDialog";
 
-const CHAT_LIMITS = {
-    MAX_MESSAGE_LENGTH: 2000,
-    MAX_USERNAME_LENGTH: 20,
-}
 const USER_LOCALE = navigator.language || navigator.languages[0];
 
 // const IS_DEV = import.meta.env.DEV === true
@@ -278,34 +276,20 @@ export const ChatHub = () => {
 
     return (
         <div>
-            <div className="flex items-center justify-center min-h-screen bg-gray-100 font-inter">
+            <div className="flex justify-center items-center h-30">
+                    <h1 className="text-8xl font-inter font-extrabold
+                                bg-gradient-to-r from-blue-500 to-purple-500 
+                                bg-clip-text text-transparent">
+                        The Chat™
+                    </h1>
+            </div>
+            <div className="flex items-center justify-center">
                 <div className={`
                 relative bg-white shadow-lg rounded-2xl flex flex-col
                 w-full md:max-w-9/10 p-8
-                max-h-[100vh] md:max-h-[90vh]
-                `}>
-                    {/* Floating username */}
-                    <input
-                        type="text"
-                        className={`absolute top-6 right-12 text-sm w-[20ch] font-bold px-2 py-1 border rounded-lg shadow-sm bg-white
-                                opacity-30
-                                focus:opacity-100
-                                focus:outline-none
-                                focus:ring-2
-                                ${{/* Limitar tamanho do username */ }}
-                                ${currentUsername.length === 0 && "focus:ring-yellow-400"}
-                                ${0 < currentUsername.length && currentUsername.length <= CHAT_LIMITS.MAX_USERNAME_LENGTH && "focus:ring-blue-400"}
-                                ${currentUsername.length > CHAT_LIMITS.MAX_USERNAME_LENGTH && "focus:ring-red-400"}
-                                
-                                  
-                            `}
-                        placeholder={`${USER_LOCALE === "pt-BR" ? "Vazio" : "Empty"}`}
-                        value={currentUsername}
-                        onChange={(e) => setCurrentUsername(e.target.value)}
-                        spellCheck={false}
-                    />
-
-                    <SettingsDialog />
+                max-h-[80vh] md:max-h-[80vh]
+                `}> {/* TODO: fix mobile height */}
+                    <SettingsDialog setCurrentUsername={setCurrentUsername} currentUsername={currentUsername} />
 
                     <ChatMessagesContent
                         isFetchingMessages={isFetchingMessages}
@@ -342,7 +326,7 @@ export const ChatHub = () => {
                                         handleSendMessage();
                                     }
                                 }}
-                                placeholder={USER_LOCALE === "pt-BR" ? "Digite uma mensagem..." : "Type a message..."}
+                                placeholder="Type a message..."
                                 rows={1}
                             />
                             <Emojis insertAtCursor={insertAtCursor} ></Emojis>
@@ -351,9 +335,10 @@ export const ChatHub = () => {
                         {/* <CustomSnippetsInput></CustomSnippetsInput> */}
                         <button
                             onClick={handleSendMessage}
-                            className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 hover:cursor-pointer"
+                            className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 hover:cursor-pointer"
                         >
-                            {"\u27A4"}
+                            <ArrowBigRight fill="white" size={22} className="scale-x-120" />
+                            {/* {"\u27A4"} */}
                         </button>
                     </div>
                 </div>

@@ -1,4 +1,5 @@
 - Melhorar visual
+-- acomodar layout corretamente no mobile
 -- tema escuro
 -- temas diferenciados por ex. vaporwave/synthwave
 - Emoticon

@@ -4,6 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+
+@layer base {
+  html {
+    @apply font-inter;
+  }
+
+}
+
 @theme inline {
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
