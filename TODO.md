@@ -15,3 +15,4 @@
 - Shader/3D/firulas
 - Localização/idioma
 - Performance Pagespeed
+- Arrumar portas do docker

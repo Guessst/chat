@@ -11,15 +11,14 @@ services:
       context: .
     ports: !reset []
     expose:
-    - "8080"
+    - "2001"
   
   frontend:
     image: guessst/chat-frontend:latest
     build:
       context: .
     ports:
-      - "80:80"
-      - "443:443"
+      - "2000:2000"
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/usr/share/nginx/html/.well-known/acme-challenge
