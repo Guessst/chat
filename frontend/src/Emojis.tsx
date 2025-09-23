@@ -11,14 +11,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Smile } from "lucide-react";
 export default function Page({insertAtCursor}: {insertAtCursor: (emoji: string) => void}) {
 
 const [isOpen, setIsOpen] = React.useState(false);
 
 return (<Popover onOpenChange={setIsOpen} open={isOpen}>
-    <PopoverTrigger asChild>
-        <Button>Open emoji picker</Button>
-    </PopoverTrigger>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Smile className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+            
     <PopoverContent className="w-fit p-0">
         <EmojiPicker
         className="h-[342px]"

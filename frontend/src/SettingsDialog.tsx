@@ -7,9 +7,9 @@ export function SettingsDialog() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div>
-      <Button variant="ghost" size="icon" onClick={() => setOpen(true)}>
-        <Settings className="h-5 w-5" />
+    <div className="absolute top-8 right-16">
+      <Button variant="ghost" asChild>
+        <Settings className="h-16 w-16" onClick={() => setOpen(true)} />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

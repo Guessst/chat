@@ -1,9 +1,12 @@
-- Arrumar para docker.compose vir da repo
-- Melhorar visual (escolher temas por ex. vaporwave/synthwave)
+- Melhorar visual
+-- tema escuro
+-- temas diferenciados por ex. vaporwave/synthwave
+- Emoticon
+- Permitir citar/responder
+- Menu de opções
 - Métricas com grafana
 - Múltiplos chats
 - Filtrar spam
 - Permitir bloquear IP
 - Visão admin
-- Permitir citar/responder
 - Shader/3D/firulas
