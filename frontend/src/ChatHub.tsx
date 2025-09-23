@@ -8,8 +8,6 @@ import { SettingsDialog } from "./SettingsDialog";
 
 const USER_LOCALE = navigator.language || navigator.languages[0];
 
-// const IS_DEV = import.meta.env.DEV === true
-
 interface ChatMessage {
     id: number
     username: string
@@ -54,6 +52,32 @@ function useLocalStorage(key: string, initialValue: string) {
     }, [key, value]);
 
     return [value, setValue] as const;
+}
+
+function getMilisecondsUntilBrazilianMidnight() {
+    const now = new Date();
+
+    // current UTC time in ms
+    const nowUtc = now.getTime() + now.getTimezoneOffset() * 60_000;
+
+    // offset for Brazil (UTC−3)
+    const brazilOffsetMs = -3 * 60 * 60 * 1000;
+
+    // current "Brazil time"
+    const nowBrazil = new Date(nowUtc + brazilOffsetMs);
+
+    // next midnight in Brazil
+    const nextMidnightBrazil = new Date(nowBrazil);
+    nextMidnightBrazil.setHours(24, 0, 0, 0);
+
+    // convert that Brazil midnight back to UTC
+    const nextMidnightUtc =
+      nextMidnightBrazil.getTime() - brazilOffsetMs;
+
+    // how long until then from now
+    const msUntilMidnight = nextMidnightUtc - nowUtc;
+
+    return msUntilMidnight
 }
 
 const MessageItem = ({ formattedMessage }: { formattedMessage: FormattedChatMessage }) => {
@@ -273,6 +297,16 @@ export const ChatHub = () => {
         }
     }, [currentInput]); // runs whenever input changes
 
+    // MISCELANEOUS
+    useEffect(() => {
+        const msUntilMidnight = getMilisecondsUntilBrazilianMidnight() 
+        const timer = setTimeout(() => {
+        window.location.reload();
+        }, msUntilMidnight);
+
+        return () => clearTimeout(timer);
+    }, [])
+
 
     return (
         <div>
@@ -331,8 +365,6 @@ export const ChatHub = () => {
                             />
                             <Emojis insertAtCursor={insertAtCursor} ></Emojis>
                         </div>
-
-                        {/* <CustomSnippetsInput></CustomSnippetsInput> */}
                         <button
                             onClick={handleSendMessage}
                             className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 hover:cursor-pointer"
@@ -343,6 +375,11 @@ export const ChatHub = () => {
                     </div>
                 </div>
             </div>
+            <footer className="py-4">
+                <div className="max-w-7xl mx-auto px-4 text-center text-sm text-amber-600">
+                ⚠️ The Chat™ resets every day at midnight Brazilian Time (UTC -3).
+                </div>
+            </footer>
         </div>
     );
 }

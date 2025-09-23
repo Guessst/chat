@@ -45,14 +45,14 @@ services:
       ENV_POSTGRES_PASSWORD: ${ENV_POSTGRES_PASSWORD}
       ASPNETCORE_ENVIRONMENT: ${ENV_ASPNETCORE_ENVIRONMENT}
     ports:
-      - "8080:8080"
+      - "2001:2001"
   
   frontend:
     build: ./frontend
     depends_on:
       - backend
     ports:
-      - "80:80"
+      - "2000:2000"
 
 volumes:
   db_data:
