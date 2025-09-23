@@ -1,12 +1,8 @@
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ENDPOINT_CHAT_HISTORY, WEBSOCKET_ADDRESS } from "./config";
-// import Cube from "./Cube";
-
 import Emojis from "./Emojis";
 import { SettingsDialog } from "./SettingsDialog";
-import CustomSnippetsInput from "./CustomSnippetsInput";
-// import Cube from "./Cube";
 
 const CHAT_LIMITS = {
     MAX_MESSAGE_LENGTH: 2000,
@@ -282,29 +278,6 @@ export const ChatHub = () => {
 
     return (
         <div>
-            <div className="">
-
-                <div className="h-40 w-full flex justify-center items-center">
-                    <div className="center w-1/2 h-1/2 flex flex-col justify-center items-center">
-                        <div className="backdrop-blur-md bg-green-500">
-                            <h1 className="text-center font-[UnifontExMono]">Inter日本語</h1>
-                            <h1 className="text-center font-inter italic">Inter (sans)</h1>
-                            <h1 className="text-8xl font-inter italic font-extrabold tracking-tight 
-                                bg-gradient-to-r from-blue-500 to-purple-500 
-                                bg-clip-text text-transparent">
-                                Kaos Chat
-                            </h1>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div className="text-center w-fit">
-
-            </div>
-
-
             <div className="flex items-center justify-center min-h-screen bg-gray-100 font-inter">
                 <div className={`
                 relative bg-white shadow-lg rounded-2xl flex flex-col
@@ -331,8 +304,8 @@ export const ChatHub = () => {
                         onChange={(e) => setCurrentUsername(e.target.value)}
                         spellCheck={false}
                     />
-                    
-                        <SettingsDialog></SettingsDialog>
+
+                    <SettingsDialog />
 
                     <ChatMessagesContent
                         isFetchingMessages={isFetchingMessages}

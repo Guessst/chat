@@ -8,8 +8,8 @@ export function SettingsDialog() {
 
   return (
     <div className="absolute top-8 right-16">
-      <Button variant="ghost" asChild>
-        <Settings className="h-16 w-16" onClick={() => setOpen(true)} />
+      <Button className="hover:cursor-pointer p-2" variant="outline" asChild>
+        <Settings className="w-10 h-10" onClick={() => setOpen(true)} />
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
