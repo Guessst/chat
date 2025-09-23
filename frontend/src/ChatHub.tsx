@@ -377,7 +377,7 @@ export const ChatHub = () => {
             </div>
             <footer className="py-4">
                 <div className="max-w-7xl mx-auto px-4 text-center text-sm text-amber-600">
-                ⚠️ The Chat™ resets every day at midnight Brazilian Time (UTC-3).
+                ⚠️ The Chat™ resets every day at midnight Brazilian Time (UTC -3).
                 </div>
             </footer>
         </div>
