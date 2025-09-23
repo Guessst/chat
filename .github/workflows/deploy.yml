@@ -43,6 +43,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             mkdir -p /home/${{ secrets.VPS_USER }}/chat
             cd /home/${{ secrets.VPS_USER }}/chat
 
@@ -53,7 +54,8 @@ jobs:
               git sparse-checkout set /docker-compose.yml /docker-compose.production.yml /frontend/nginx.production.conf
               git checkout main
             else
-              git pull origin main
+              git fetch origin main
+              git reset --hard origin/main
             fi
 
             # Deploy prebuilt images
