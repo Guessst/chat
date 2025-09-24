@@ -3,7 +3,6 @@
 -- temas diferenciados por ex. vaporwave/synthwave
 -- Digitação "flúida"
 - Modo "demo" integrado com IA
-- Aba de informações
 - Kaomoji/caules
 - Permitir citar/responder
 - Múltiplos chats

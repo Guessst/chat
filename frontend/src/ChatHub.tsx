@@ -321,7 +321,7 @@ export const ChatHub = () => {
                 <div className={`
                 relative bg-white rounded-none sm:shadow-lg sm:rounded-2xl flex flex-col
                 w-full md:max-w-9/10 p-8
-                max-h-[100vh] sm:max-h-[80vh]
+                min-h-[100vh] max-h-[100vh] sm:min-h-[80vh]
                 `}>
                     <SettingsDialog setCurrentUsername={setCurrentUsername} currentUsername={currentUsername} />
 
