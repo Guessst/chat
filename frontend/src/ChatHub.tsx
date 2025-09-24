@@ -310,7 +310,7 @@ export const ChatHub = () => {
 
     return (
         <div>
-            <div className="flex justify-center items-center h-30">
+            <div className="hidden sm:flex justify-center items-center h-30">
                     <h1 className="text-8xl font-inter font-extrabold
                                 bg-gradient-to-r from-blue-500 to-purple-500 
                                 bg-clip-text text-transparent">
@@ -319,10 +319,10 @@ export const ChatHub = () => {
             </div>
             <div className="flex items-center justify-center">
                 <div className={`
-                relative bg-white shadow-lg rounded-2xl flex flex-col
+                relative bg-white rounded-none sm:shadow-lg sm:rounded-2xl flex flex-col
                 w-full md:max-w-9/10 p-8
-                max-h-[80vh] md:max-h-[80vh]
-                `}> {/* TODO: fix mobile height */}
+                max-h-[100vh] sm:max-h-[80vh]
+                `}>
                     <SettingsDialog setCurrentUsername={setCurrentUsername} currentUsername={currentUsername} />
 
                     <ChatMessagesContent
@@ -375,7 +375,7 @@ export const ChatHub = () => {
                     </div>
                 </div>
             </div>
-            <footer className="py-4">
+            <footer className="hidden sm:block py-4">
                 <div className="max-w-7xl mx-auto px-4 text-center text-sm text-amber-600">
                 ⚠️ The Chat™ resets every day at midnight Brazilian Time (UTC -3).
                 </div>
