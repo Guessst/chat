@@ -1,18 +1,18 @@
 - Melhorar visual
--- acomodar layout corretamente no mobile
 -- tema escuro
 -- temas diferenciados por ex. vaporwave/synthwave
 -- Digitação "flúida"
+- Modo "demo" integrado com IA
+- Aba de informações
 - Kaomoji/caules
 - Permitir citar/responder
+- Múltiplos chats
+- Localização/idioma
+- Permitir bloquear IP
 - Mostrar infos em tempo real por ex. usuários online
 - Métricas com grafana/prometheus
-- Múltiplos chats
-- mudar domínio para 'chat.gustavoqueiroz.dev'
-- Filtrar spam
-- Permitir bloquear IP
-- Visão admin
 - Shader/3D/firulas
-- Localização/idioma
+- Filtrar spam
+- Visão admin
 - Performance Pagespeed
 - Arrumar portas do docker
