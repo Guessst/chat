@@ -56,10 +56,10 @@ export function SettingsDialog({ currentUsername, setCurrentUsername }: Settings
             <DialogTitle>Find me @</DialogTitle>
             <div className="flex gap-4">
               <a href="https://github.com/Guessst" target="_blank" rel="noopener noreferrer">
-                <img src="public/github.svg" alt="GitHub" className="w-10 h-10 hover:opacity-80 transition" />
+                <img src="github.svg" alt="GitHub" className="w-10 h-10 hover:opacity-80 transition" />
               </a>
               <a href="https://www.linkedin.com/in/gustavo-queiroz-a4aaba215/" target="_blank" rel="noopener noreferrer">
-                <img src="public/linkedin.svg" alt="LinkedIn" className="w-10 h-10 hover:opacity-80 transition" />
+                <img src="linkedin.svg" alt="LinkedIn" className="w-10 h-10 hover:opacity-80 transition" />
               </a>
             </div>
           </div>
